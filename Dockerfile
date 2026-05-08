@@ -6,7 +6,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
-    && docker-php-ext-install pdo pdo_mysql
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql zip
+
+# Tăng memory limit cho PHP
+RUN echo "memory_limit = -1" > /usr/local/etc/php/conf.d/memory.ini
 
 # Cài Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -15,8 +19,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-# Cài dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Cài dependencies — thêm flag memory và ignore platform
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # Copy file .env
 COPY .env.example .env
